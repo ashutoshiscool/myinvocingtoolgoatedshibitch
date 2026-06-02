@@ -14,8 +14,8 @@ export async function getPaypalConfig(): Promise<PaypalConfig> {
     const settings = await db.get('SELECT paypal_mode, paypal_client_id, paypal_client_secret FROM company_settings LIMIT 1');
     
     const mode = (settings?.paypal_mode || process.env.PAYPAL_MODE || 'simulation') as 'simulation' | 'sandbox' | 'live';
-    const clientId = settings?.paypal_client_id || process.env.PAYPAL_CLIENT_ID || '';
-    const clientSecret = settings?.paypal_client_secret || process.env.PAYPAL_CLIENT_SECRET || '';
+    const clientId = (settings?.paypal_client_id || process.env.PAYPAL_CLIENT_ID || '').trim();
+    const clientSecret = (settings?.paypal_client_secret || process.env.PAYPAL_CLIENT_SECRET || '').trim();
     
     const baseUrl = mode === 'live' 
       ? 'https://api-m.paypal.com' 
@@ -25,8 +25,8 @@ export async function getPaypalConfig(): Promise<PaypalConfig> {
   } catch (err) {
     console.error('Error fetching PayPal config from DB, falling back to process.env: ', err);
     const mode = (process.env.PAYPAL_MODE || 'simulation') as 'simulation' | 'sandbox' | 'live';
-    const clientId = process.env.PAYPAL_CLIENT_ID || '';
-    const clientSecret = process.env.PAYPAL_CLIENT_SECRET || '';
+    const clientId = (process.env.PAYPAL_CLIENT_ID || '').trim();
+    const clientSecret = (process.env.PAYPAL_CLIENT_SECRET || '').trim();
     const baseUrl = mode === 'live' 
       ? 'https://api-m.paypal.com' 
       : 'https://api-m.sandbox.paypal.com';
@@ -69,6 +69,8 @@ export async function createPaypalOrder(amount: number, currency: string, invoic
       intent: 'CAPTURE',
       purchase_units: [{
         reference_id: invoiceNumber,
+        description: `Invoice No. ${invoiceNumber} Paid`,
+        custom_id: invoiceNumber,
         amount: {
           currency_code: currency,
           value: amount.toFixed(2)

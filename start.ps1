@@ -87,6 +87,23 @@ if (-not (Test-Path "frontend\node_modules")) {
     Write-Host "✅ Frontend dependencies are already installed." -ForegroundColor Green
 }
 
+Write-Host "🛡️  Checking for port conflicts..." -ForegroundColor Cyan
+
+function Kill-Port {
+    param ($Port)
+    $Connections = Get-NetTCPConnection -LocalPort $Port -State Listen -ErrorAction SilentlyContinue
+    if ($Connections) {
+        Write-Host "💥 Port $Port is in use. Terminating the stuck process..." -ForegroundColor Red
+        foreach ($Conn in $Connections) {
+            Stop-Process -Id $Conn.OwningProcess -Force -ErrorAction SilentlyContinue
+        }
+        Start-Sleep -Seconds 1
+    }
+}
+
+Kill-Port 5000
+Kill-Port 5173
+
 Write-Host "🚀 Starting backend and frontend development servers..." -ForegroundColor Cyan
 Write-Host "===============================================" -ForegroundColor Cyan
 

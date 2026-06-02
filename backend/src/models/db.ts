@@ -50,11 +50,21 @@ async function initializeSchema(db: Database) {
       smtp_user TEXT,
       smtp_pass TEXT,
       smtp_from TEXT,
+      smtp_encryption TEXT DEFAULT 'none',
+      smtp_from_name TEXT DEFAULT 'Pterodactyl Panel',
       paypal_mode TEXT DEFAULT 'simulation',
       paypal_client_id TEXT,
       paypal_client_secret TEXT
     )
   `);
+
+  // Migrate existing databases to support new SMTP configurations if they don't exist
+  try {
+    await db.exec(`ALTER TABLE company_settings ADD COLUMN smtp_encryption TEXT DEFAULT 'none'`);
+  } catch (err) {}
+  try {
+    await db.exec(`ALTER TABLE company_settings ADD COLUMN smtp_from_name TEXT DEFAULT 'Pterodactyl Panel'`);
+  } catch (err) {}
 
   // Migrate existing databases to support PayPal configurations if they don't exist
   try {
@@ -76,10 +86,24 @@ async function initializeSchema(db: Database) {
       email TEXT NOT NULL,
       phone TEXT,
       address TEXT NOT NULL,
+      registration_code TEXT,
+      director_name TEXT,
+      logo_url TEXT,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
     )
   `);
+
+  // Migrate existing databases to support new customer fields
+  try {
+    await db.exec(`ALTER TABLE customers ADD COLUMN registration_code TEXT`);
+  } catch (err) {}
+  try {
+    await db.exec(`ALTER TABLE customers ADD COLUMN director_name TEXT`);
+  } catch (err) {}
+  try {
+    await db.exec(`ALTER TABLE customers ADD COLUMN logo_url TEXT`);
+  } catch (err) {}
 
   // Invoices table
   await db.exec(`

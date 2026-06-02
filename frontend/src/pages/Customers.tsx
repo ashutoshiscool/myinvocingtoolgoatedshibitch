@@ -21,6 +21,9 @@ interface Customer {
   email: string;
   phone?: string;
   address: string;
+  registration_code?: string;
+  director_name?: string;
+  logo_url?: string;
 }
 
 export default function Customers() {
@@ -58,6 +61,9 @@ export default function Customers() {
       email: '',
       phone: '',
       address: '',
+      registration_code: '',
+      director_name: '',
+      logo_url: '',
     });
     setModalError(null);
     setIsModalOpen(true);
@@ -357,6 +363,42 @@ export default function Customers() {
                       required
                       rows={3}
                       placeholder="123 Industrial Way, Suite A, City, State"
+                      className="w-full px-4.5 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 dark:text-white"
+                    />
+                  </div>
+
+                  <div className="space-y-1.5 sm:col-span-1">
+                    <label className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Registration Code (Optional)</label>
+                    <input
+                      type="text"
+                      name="registration_code"
+                      value={currentCustomer.registration_code || ''}
+                      onChange={handleInputChange}
+                      placeholder="e.g. 123456789"
+                      className="w-full px-4.5 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 dark:text-white"
+                    />
+                  </div>
+
+                  <div className="space-y-1.5 sm:col-span-1">
+                    <label className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Director Name (Optional)</label>
+                    <input
+                      type="text"
+                      name="director_name"
+                      value={currentCustomer.director_name || ''}
+                      onChange={handleInputChange}
+                      placeholder="e.g. Jane Smith"
+                      className="w-full px-4.5 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 dark:text-white"
+                    />
+                  </div>
+
+                  <div className="space-y-1.5 sm:col-span-2">
+                    <label className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Company Logo URL (Optional)</label>
+                    <input
+                      type="url"
+                      name="logo_url"
+                      value={currentCustomer.logo_url || ''}
+                      onChange={handleInputChange}
+                      placeholder="https://example.com/logo.png"
                       className="w-full px-4.5 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 dark:text-white"
                     />
                   </div>

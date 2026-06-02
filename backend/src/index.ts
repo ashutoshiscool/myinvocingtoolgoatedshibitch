@@ -35,6 +35,7 @@ app.get('/api/auth/me', authenticateJWT, authController.getMe);
 // Settings Routes
 app.get('/api/settings', authenticateJWT, settingsController.getSettings);
 app.put('/api/settings', authenticateJWT, settingsController.updateSettings);
+app.post('/api/settings/test-email', authenticateJWT, settingsController.testEmailSettings);
 
 // Customer Routes
 app.get('/api/customers', authenticateJWT, customerController.listCustomers);
@@ -74,8 +75,8 @@ async function startServer() {
     await getDb();
     console.log('Database initialized successfully.');
 
-    app.listen(PORT, () => {
-      console.log(`Lumor Pay Backend listening on port ${PORT}`);
+    app.listen(PORT as number, '0.0.0.0', () => {
+      console.log(`Lumor Pay Backend listening on port ${PORT} (0.0.0.0)`);
     });
   } catch (error) {
     console.error('Failed to start server:', error);

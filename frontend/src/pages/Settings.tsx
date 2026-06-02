@@ -17,6 +17,12 @@ export default function Settings() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  
+  // Test connection modal state
+  const [showTestModal, setShowTestModal] = useState(false);
+  const [testRecipient, setTestRecipient] = useState('');
+  const [sendingTest, setSendingTest] = useState(false);
+  const [testMessage, setTestMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
   // Form State
   const [formData, setFormData] = useState({
@@ -35,6 +41,8 @@ export default function Settings() {
     smtp_user: '',
     smtp_pass: '',
     smtp_from: '',
+    smtp_from_name: 'Pterodactyl Panel',
+    smtp_encryption: 'none',
     paypal_mode: 'simulation',
     paypal_client_id: '',
     paypal_client_secret: '',
@@ -48,6 +56,8 @@ export default function Settings() {
         admin_password: '', // Don't prefill password
         smtp_pass: response.data.smtp_user ? '********' : '', // Placeholder to show it is set
         paypal_client_secret: response.data.paypal_client_id ? '********' : '', // Placeholder to show it is set
+        smtp_from_name: response.data.smtp_from_name || 'Pterodactyl Panel',
+        smtp_encryption: response.data.smtp_encryption || 'none',
       });
     } catch (err) {
       console.error('Failed to load settings', err);
@@ -86,6 +96,36 @@ export default function Settings() {
       setMessage({ type: 'error', text: errMsg });
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleCancel = () => {
+    fetchSettings();
+    setMessage({ type: 'success', text: 'Unsaved changes discarded.' });
+  };
+
+  const handleSendTest = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!testRecipient) return;
+    setSendingTest(true);
+    setTestMessage(null);
+    try {
+      const response = await api.post('/settings/test-email', {
+        smtp_host: formData.smtp_host,
+        smtp_port: formData.smtp_port,
+        smtp_encryption: formData.smtp_encryption,
+        smtp_user: formData.smtp_user,
+        smtp_pass: formData.smtp_pass,
+        smtp_from: formData.smtp_from,
+        smtp_from_name: formData.smtp_from_name,
+        recipient_email: testRecipient
+      });
+      setTestMessage({ type: 'success', text: response.data.message || 'Test email sent successfully!' });
+    } catch (err: any) {
+      const errMsg = err.response?.data?.error || 'Failed to send test email. Please check your configurations.';
+      setTestMessage({ type: 'error', text: errMsg });
+    } finally {
+      setSendingTest(false);
     }
   };
 
@@ -294,7 +334,7 @@ export default function Settings() {
           <div className="space-y-6">
             <div>
               <h3 className="text-lg font-bold text-slate-900 dark:text-white">SMTP Email Settings</h3>
-              <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">SMTP credentials are used to send invoice notification emails with attached PDFs to your customers.</p>
+              <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">Configure the SMTP credentials to send invoice notification emails with attached PDFs to your customers.</p>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               
@@ -305,9 +345,10 @@ export default function Settings() {
                   name="smtp_host"
                   value={formData.smtp_host || ''}
                   onChange={handleInputChange}
-                  placeholder="smtp.mailtrap.io"
+                  placeholder="smtp.example.com"
                   className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 dark:text-white"
                 />
+                <p className="text-[10px] text-slate-400 dark:text-slate-500 leading-relaxed">Enter the SMTP server address that mail should be sent through.</p>
               </div>
 
               <div className="space-y-1.5">
@@ -315,15 +356,31 @@ export default function Settings() {
                 <input
                   type="number"
                   name="smtp_port"
-                  value={formData.smtp_port || 587}
+                  value={formData.smtp_port !== undefined ? formData.smtp_port : 25}
                   onChange={handleInputChange}
-                  placeholder="587"
+                  placeholder="25"
                   className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 dark:text-white"
                 />
+                <p className="text-[10px] text-slate-400 dark:text-slate-500 leading-relaxed">Enter the SMTP server port that mail should be sent through.</p>
+              </div>
+
+              <div className="space-y-1.5 md:col-span-2">
+                <label className="text-xs font-bold text-slate-400 dark:text-slate-550 uppercase tracking-wider">Encryption</label>
+                <select
+                  name="smtp_encryption"
+                  value={formData.smtp_encryption}
+                  onChange={handleInputChange}
+                  className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 dark:text-white"
+                >
+                  <option value="none">None (Plain / STARTTLS optional)</option>
+                  <option value="ssl">Transport Layer Security (TLS / SSL)</option>
+                  <option value="starttls">STARTTLS</option>
+                </select>
+                <p className="text-[10px] text-slate-400 dark:text-slate-500 leading-relaxed">Select the type of encryption to use when sending mail.</p>
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-xs font-bold text-slate-400 dark:text-slate-550 uppercase tracking-wider">SMTP Username</label>
+                <label className="text-xs font-bold text-slate-400 dark:text-slate-550 uppercase tracking-wider">Username</label>
                 <input
                   type="text"
                   name="smtp_user"
@@ -332,10 +389,11 @@ export default function Settings() {
                   placeholder="user@provider.com"
                   className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 dark:text-white"
                 />
+                <p className="text-[10px] text-slate-400 dark:text-slate-500 leading-relaxed">The username to use when connecting to the SMTP server.</p>
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-xs font-bold text-slate-400 dark:text-slate-550 uppercase tracking-wider">SMTP Password</label>
+                <label className="text-xs font-bold text-slate-400 dark:text-slate-550 uppercase tracking-wider">Password</label>
                 <input
                   type="password"
                   name="smtp_pass"
@@ -344,20 +402,52 @@ export default function Settings() {
                   placeholder={formData.smtp_user ? '********' : 'Enter SMTP password'}
                   className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 dark:text-white"
                 />
+                <p className="text-[10px] text-slate-400 dark:text-slate-500 leading-relaxed">
+                  The password to use in conjunction with the SMTP username. Leave blank to continue using the existing password. To set the password to an empty value enter <code className="font-mono bg-slate-100 dark:bg-slate-800 px-1 py-0.5 rounded text-red-500 font-semibold text-[9px]">!e</code> into the field.
+                </p>
               </div>
 
-              <div className="space-y-1.5 md:col-span-2">
-                <label className="text-xs font-bold text-slate-400 dark:text-slate-550 uppercase tracking-wider">Sender Email (From)</label>
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-slate-400 dark:text-slate-550 uppercase tracking-wider">Mail From</label>
                 <input
                   type="email"
                   name="smtp_from"
                   value={formData.smtp_from || ''}
                   onChange={handleInputChange}
-                  placeholder="invoices@mycompany.com"
+                  placeholder="no-reply@example.com"
                   className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 dark:text-white"
                 />
+                <p className="text-[10px] text-slate-400 dark:text-slate-500 leading-relaxed">Enter an email address that all outgoing emails will originate from.</p>
               </div>
 
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-slate-400 dark:text-slate-550 uppercase tracking-wider">Mail From Name</label>
+                <input
+                  type="text"
+                  name="smtp_from_name"
+                  value={formData.smtp_from_name || ''}
+                  onChange={handleInputChange}
+                  placeholder="Pterodactyl Panel"
+                  className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 dark:text-white"
+                />
+                <p className="text-[10px] text-slate-400 dark:text-slate-500 leading-relaxed">The name that emails should appear to come from.</p>
+              </div>
+
+            </div>
+
+            {/* Test Connection Action Box */}
+            <div className="mt-6 pt-6 border-t border-slate-100 dark:border-slate-800 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              <div>
+                <h4 className="text-sm font-bold text-slate-900 dark:text-white">Test Mail Settings</h4>
+                <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">Send a test email using the credentials currently filled in above.</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowTestModal(true)}
+                className="self-start sm:self-center px-4 py-2 bg-indigo-50 dark:bg-indigo-950/30 hover:bg-indigo-100 dark:hover:bg-indigo-900/50 text-indigo-600 dark:text-indigo-400 rounded-xl text-xs font-bold shadow-sm transition-all"
+              >
+                Send Test Email
+              </button>
             </div>
           </div>
         )}
@@ -472,7 +562,15 @@ export default function Settings() {
         )}
 
         {/* Form Actions Footer */}
-        <div className="mt-8 pt-6 border-t border-slate-200 dark:border-slate-800 flex justify-end">
+        <div className="mt-8 pt-6 border-t border-slate-200 dark:border-slate-800 flex justify-end space-x-3">
+          <button
+            type="button"
+            onClick={handleCancel}
+            className="px-6 py-2.5 bg-slate-100 hover:bg-slate-200 active:bg-slate-350 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-250 rounded-xl text-sm font-semibold transition-all border border-transparent dark:border-slate-700"
+          >
+            Cancel
+          </button>
+          
           <button
             type="submit"
             disabled={saving}
@@ -490,6 +588,89 @@ export default function Settings() {
         </div>
 
       </form>
+      
+      {/* Test Connection Modal */}
+      {showTestModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4">
+          <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xl max-w-md w-full p-6 animate-in fade-in zoom-in-95 duration-150">
+            <div className="flex items-center justify-between mb-2">
+              <h3 className="text-lg font-bold text-slate-900 dark:text-white">Test SMTP Configuration</h3>
+              <button
+                type="button"
+                onClick={() => {
+                  setShowTestModal(false);
+                  setTestMessage(null);
+                  setTestRecipient('');
+                }}
+                className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-lg font-bold"
+              >
+                &times;
+              </button>
+            </div>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mb-6">
+              Enter a recipient email address below to send a test message. This uses the unsaved values currently displayed in your SMTP settings form.
+            </p>
+            
+            {testMessage && (
+              <div className={`flex items-start space-x-2.5 p-4 mb-5 rounded-xl border text-xs leading-relaxed
+                ${testMessage.type === 'success' 
+                  ? 'bg-emerald-50 dark:bg-emerald-950/20 text-emerald-700 dark:text-emerald-400 border-emerald-100 dark:border-emerald-950/40' 
+                  : 'bg-red-50 dark:bg-red-950/20 text-red-700 dark:text-red-400 border-red-100 dark:border-red-950/40'
+                }
+              `}>
+                {testMessage.type === 'success' ? (
+                  <CheckCircle2 className="w-5 h-5 shrink-0 text-emerald-500" />
+                ) : (
+                  <AlertCircle className="w-5 h-5 shrink-0 text-red-500" />
+                )}
+                <div className="flex-1">
+                  <p className="font-bold mb-0.5">{testMessage.type === 'success' ? 'Success' : 'SMTP Connection Error'}</p>
+                  <p className="break-words font-medium">{testMessage.text}</p>
+                </div>
+              </div>
+            )}
+            
+            <form onSubmit={handleSendTest} className="space-y-4">
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-slate-400 dark:text-slate-550 uppercase tracking-wider">Recipient Email</label>
+                <input
+                  type="email"
+                  required
+                  placeholder="recipient@example.com"
+                  value={testRecipient}
+                  onChange={(e) => setTestRecipient(e.target.value)}
+                  className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 dark:text-white"
+                />
+              </div>
+              
+              <div className="flex justify-end space-x-3 pt-4 border-t border-slate-100 dark:border-slate-800">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowTestModal(false);
+                    setTestMessage(null);
+                    setTestRecipient('');
+                  }}
+                  className="px-4 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-xl text-xs font-bold transition-all"
+                >
+                  Close
+                </button>
+                <button
+                  type="submit"
+                  disabled={sendingTest}
+                  className="flex items-center space-x-1.5 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold shadow-md hover:shadow-lg transition-all"
+                >
+                  {sendingTest ? (
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  ) : (
+                    <span>Send Test Email</span>
+                  )}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
       
     </div>
   );

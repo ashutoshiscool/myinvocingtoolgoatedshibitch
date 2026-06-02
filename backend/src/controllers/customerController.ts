@@ -14,7 +14,7 @@ export async function listCustomers(req: AuthenticatedRequest, res: Response) {
 }
 
 export async function createCustomer(req: AuthenticatedRequest, res: Response) {
-  const { company_name, contact_name, email, phone, address } = req.body;
+  const { company_name, contact_name, email, phone, address, registration_code, director_name, logo_url } = req.body;
 
   if (!company_name || !contact_name || !email || !address) {
     return res.status(400).json({ error: 'Company name, contact name, email, and address are required.' });
@@ -23,9 +23,9 @@ export async function createCustomer(req: AuthenticatedRequest, res: Response) {
   try {
     const db = await getDb();
     const result = await db.run(`
-      INSERT INTO customers (company_name, contact_name, email, phone, address)
-      VALUES (?, ?, ?, ?, ?)
-    `, [company_name, contact_name, email, phone || null, address]);
+      INSERT INTO customers (company_name, contact_name, email, phone, address, registration_code, director_name, logo_url)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    `, [company_name, contact_name, email, phone || null, address, registration_code || null, director_name || null, logo_url || null]);
 
     const newCustomer = await db.get('SELECT * FROM customers WHERE id = ?', result.lastID);
     res.status(201).json(newCustomer);
@@ -37,7 +37,7 @@ export async function createCustomer(req: AuthenticatedRequest, res: Response) {
 
 export async function updateCustomer(req: AuthenticatedRequest, res: Response) {
   const { id } = req.params;
-  const { company_name, contact_name, email, phone, address } = req.body;
+  const { company_name, contact_name, email, phone, address, registration_code, director_name, logo_url } = req.body;
 
   if (!company_name || !contact_name || !email || !address) {
     return res.status(400).json({ error: 'Company name, contact name, email, and address are required.' });
@@ -53,9 +53,9 @@ export async function updateCustomer(req: AuthenticatedRequest, res: Response) {
 
     await db.run(`
       UPDATE customers
-      SET company_name = ?, contact_name = ?, email = ?, phone = ?, address = ?, updated_at = CURRENT_TIMESTAMP
+      SET company_name = ?, contact_name = ?, email = ?, phone = ?, address = ?, registration_code = ?, director_name = ?, logo_url = ?, updated_at = CURRENT_TIMESTAMP
       WHERE id = ?
-    `, [company_name, contact_name, email, phone || null, address, id]);
+    `, [company_name, contact_name, email, phone || null, address, registration_code || null, director_name || null, logo_url || null, id]);
 
     const updatedCustomer = await db.get('SELECT * FROM customers WHERE id = ?', id);
     res.json(updatedCustomer);

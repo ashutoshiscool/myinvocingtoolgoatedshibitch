@@ -15,6 +15,8 @@ interface CustomerDetails {
   email: string;
   phone?: string;
   address: string;
+  registration_code?: string;
+  director_name?: string;
 }
 
 interface InvoiceItem {
@@ -137,9 +139,16 @@ export function generateInvoicePDF(
       .text(customer.address, 50, 245, { width: 250 })
       .text(`Email: ${customer.email}`, 50, 280)
       .text(`Phone: ${customer.phone || 'N/A'}`, 50, 292);
+      
+    if (customer.registration_code) {
+      doc.text(`Reg Code: ${customer.registration_code}`, 50, 304);
+    }
+    if (customer.director_name) {
+      doc.text(`Director: ${customer.director_name}`, 50, 316);
+    }
 
     // Table Header
-    const tableTop = 320;
+    const tableTop = 335;
     doc
       .rect(50, tableTop, 495, 20)
       .fill(primaryColor);

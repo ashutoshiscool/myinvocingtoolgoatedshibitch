@@ -12,7 +12,9 @@ export async function getPublicInvoice(req: Request, res: Response) {
     // Fetch invoice details
     const invoice = await db.get(`
       SELECT i.*, c.company_name as customer_name, c.contact_name as customer_contact, 
-             c.email as customer_email, c.phone as customer_phone, c.address as customer_address
+             c.email as customer_email, c.phone as customer_phone, c.address as customer_address,
+             c.registration_code as customer_registration_code, c.director_name as customer_director_name,
+             c.logo_url as customer_logo_url
       FROM invoices i
       JOIN customers c ON i.customer_id = c.id
       WHERE i.secure_hash = ?

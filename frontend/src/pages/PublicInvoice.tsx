@@ -22,6 +22,9 @@ interface InvoiceData {
     customer_email: string;
     customer_address: string;
     customer_phone?: string;
+    customer_registration_code?: string;
+    customer_director_name?: string;
+    customer_logo_url?: string;
     issue_date: string;
     due_date: string;
     currency: string;
@@ -215,9 +218,24 @@ export default function PublicInvoice() {
             <div className="p-8 grid grid-cols-1 sm:grid-cols-2 gap-6 border-b border-slate-100 dark:border-slate-800/60 text-sm">
               <div className="space-y-2">
                 <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Invoiced To:</p>
-                <p className="font-bold text-slate-800 dark:text-slate-300">{invoice.customer_name}</p>
+                <div className="flex items-center space-x-3">
+                  {invoice.customer_logo_url && (
+                    <img 
+                      src={invoice.customer_logo_url} 
+                      alt="Customer Logo" 
+                      className="w-10 h-10 rounded-lg object-contain border border-slate-200 dark:border-slate-800 bg-white p-0.5"
+                    />
+                  )}
+                  <p className="font-bold text-slate-800 dark:text-slate-300">{invoice.customer_name}</p>
+                </div>
                 <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed max-w-xs">{invoice.customer_address}</p>
                 <p className="text-xs text-slate-500">Email: {invoice.customer_email}</p>
+                {(invoice.customer_registration_code || invoice.customer_director_name) && (
+                  <div className="flex flex-wrap gap-x-3 gap-y-1 mt-1 text-[11px] text-slate-400 dark:text-slate-500">
+                    {invoice.customer_registration_code && <span>Reg Code: {invoice.customer_registration_code}</span>}
+                    {invoice.customer_director_name && <span>Director: {invoice.customer_director_name}</span>}
+                  </div>
+                )}
               </div>
 
               <div className="space-y-3 sm:text-right">
@@ -371,7 +389,7 @@ export default function PublicInvoice() {
                         </div>
 
                         {/* PayPal scripts buttons */}
-                        <PayPalScriptProvider options={{ clientId: data.paypalClientId || "test" }}>
+                        <PayPalScriptProvider options={{ clientId: data.paypalClientId || "test", currency: invoice.currency }}>
                           <PayPalButtons
                             style={{ layout: "vertical", height: 38 }}
                             createOrder={async () => {
