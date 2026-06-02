@@ -77,6 +77,14 @@ async function initializeSchema(db: Database) {
     await db.exec(`ALTER TABLE company_settings ADD COLUMN paypal_client_secret TEXT`);
   } catch (err) {}
 
+  // Migrate existing databases to support site branding
+  try {
+    await db.exec(`ALTER TABLE company_settings ADD COLUMN site_title TEXT`);
+  } catch (err) {}
+  try {
+    await db.exec(`ALTER TABLE company_settings ADD COLUMN favicon_url TEXT`);
+  } catch (err) {}
+
   // Customers table
   await db.exec(`
     CREATE TABLE IF NOT EXISTS customers (

@@ -55,7 +55,9 @@ export async function updateSettings(req: AuthenticatedRequest, res: Response) {
     smtp_encryption,
     paypal_mode,
     paypal_client_id,
-    paypal_client_secret
+    paypal_client_secret,
+    site_title,
+    favicon_url
   } = req.body;
 
   try {
@@ -115,7 +117,9 @@ export async function updateSettings(req: AuthenticatedRequest, res: Response) {
         smtp_encryption = ?,
         paypal_mode = ?,
         paypal_client_id = ?,
-        paypal_client_secret = ?
+        paypal_client_secret = ?,
+        site_title = ?,
+        favicon_url = ?
       WHERE id = ?
     `, [
       updatedUsername,
@@ -138,6 +142,8 @@ export async function updateSettings(req: AuthenticatedRequest, res: Response) {
       paypal_mode || currentSettings.paypal_mode || 'simulation',
       paypal_client_id !== undefined ? paypal_client_id : currentSettings.paypal_client_id,
       finalPaypalSecret,
+      site_title !== undefined ? site_title : currentSettings.site_title,
+      favicon_url !== undefined ? favicon_url : currentSettings.favicon_url,
       currentSettings.id
     ]);
 

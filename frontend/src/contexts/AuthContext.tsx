@@ -7,6 +7,8 @@ interface AdminInfo {
   default_currency: string;
   default_tax_rate: number;
   logo_url?: string;
+  site_title?: string;
+  favicon_url?: string;
 }
 
 interface AuthContextType {
@@ -34,6 +36,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       const response = await api.get('/auth/me');
       setAdmin(response.data.admin);
+      
+      // Dynamically update branding
+      const branding = response.data.admin;
+      if (branding.site_title) {
+        document.title = branding.site_title;
+      } else if (branding.company_name) {
+        document.title = branding.company_name;
+      }
+
+      if (branding.favicon_url) {
+        let link = document.querySelector("link[rel~='icon']") as HTMLLinkElement;
+        if (!link) {
+          link = document.createElement('link');
+          link.rel = 'icon';
+          document.head.appendChild(link);
+        }
+        link.href = branding.favicon_url;
+      }
+      
     } catch (error) {
       console.error('Failed to verify token', error);
       localStorage.removeItem('admin_token');

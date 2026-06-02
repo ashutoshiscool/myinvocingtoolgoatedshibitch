@@ -41,7 +41,10 @@ export async function login(req: Request, res: Response) {
       token,
       admin: {
         username: settings.admin_username,
-        company_name: settings.company_name
+        company_name: settings.company_name,
+        logo_url: settings.logo_url,
+        site_title: settings.site_title,
+        favicon_url: settings.favicon_url
       }
     });
   } catch (error) {
@@ -58,14 +61,16 @@ export async function getMe(req: Request, res: Response) {
 
   try {
     const db = await getDb();
-    const settings = await db.get('SELECT id, admin_username, company_name, default_currency, default_tax_rate, logo_url FROM company_settings LIMIT 1');
+    const settings = await db.get('SELECT id, admin_username, company_name, default_currency, default_tax_rate, logo_url, site_title, favicon_url FROM company_settings LIMIT 1');
     res.json({
       admin: {
         username: settings.admin_username,
         company_name: settings.company_name,
         default_currency: settings.default_currency,
         default_tax_rate: settings.default_tax_rate,
-        logo_url: settings.logo_url
+        logo_url: settings.logo_url,
+        site_title: settings.site_title,
+        favicon_url: settings.favicon_url
       }
     });
   } catch (error) {
