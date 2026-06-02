@@ -494,57 +494,54 @@ export default function Settings() {
                   onChange={handleInputChange}
                   className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 dark:text-white"
                 >
-                  <option value="simulation">Simulation Mode (Fully automated, no keys required)</option>
-                  <option value="sandbox">Sandbox Mode (PayPal Test Environment)</option>
-                  <option value="live">Live Mode (Real Customer Payments)</option>
+                  <option value="sandbox">Sandbox Mode (Testing with API Keys)</option>
+                  <option value="live">Live Mode (Production)</option>
                 </select>
               </div>
 
-              {formData.paypal_mode !== 'simulation' && (
-                <>
-                  <div className="space-y-1.5 md:col-span-2">
-                    <div className="bg-indigo-50 dark:bg-indigo-950/20 border border-indigo-100 dark:border-indigo-900/30 p-4 rounded-xl">
-                      <p className="text-xs font-bold text-indigo-800 dark:text-indigo-400">ℹ️ PayPal API Key Guidelines</p>
-                      <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">
-                        To enable real checkouts, do not enter your personal login email/password in the fields below. You must retrieve your <strong>Client ID</strong> and <strong>Secret</strong> from the <a href="https://developer.paypal.com" target="_blank" rel="noreferrer" className="text-indigo-600 dark:text-indigo-400 font-semibold underline">PayPal Developer Portal</a> under Apps & Credentials.
-                      </p>
-                    </div>
+              <>
+                <div className="space-y-1.5 md:col-span-2">
+                  <div className="bg-indigo-50 dark:bg-indigo-950/20 border border-indigo-100 dark:border-indigo-900/30 p-4 rounded-xl">
+                    <p className="text-xs font-bold text-indigo-800 dark:text-indigo-400">ℹ️ PayPal API Key Guidelines</p>
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">
+                      To enable real checkouts, do not enter your personal login email/password in the fields below. You must retrieve your <strong>Client ID</strong> and <strong>Secret</strong> from the <a href="https://developer.paypal.com" target="_blank" rel="noreferrer" className="text-indigo-600 dark:text-indigo-400 font-semibold underline">PayPal Developer Portal</a> under Apps & Credentials.
+                    </p>
                   </div>
+                </div>
 
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-bold text-slate-400 dark:text-slate-555 uppercase tracking-wider">PayPal Client ID</label>
-                    <input
-                      type="text"
-                      name="paypal_client_id"
-                      value={formData.paypal_client_id || ''}
-                      onChange={handleInputChange}
-                      placeholder="Enter PayPal Client ID"
-                      required={formData.paypal_mode !== 'simulation'}
-                      className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 dark:text-white font-mono"
-                    />
-                  </div>
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-slate-400 dark:text-slate-555 uppercase tracking-wider">PayPal Client ID</label>
+                  <input
+                    type="text"
+                    name="paypal_client_id"
+                    value={formData.paypal_client_id || ''}
+                    onChange={handleInputChange}
+                    placeholder="Enter PayPal Client ID"
+                    required
+                    className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 dark:text-white font-mono"
+                  />
+                </div>
 
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-bold text-slate-400 dark:text-slate-555 uppercase tracking-wider">PayPal Client Secret</label>
-                    <input
-                      type="password"
-                      name="paypal_client_secret"
-                      value={formData.paypal_client_secret || ''}
-                      onChange={handleInputChange}
-                      placeholder={formData.paypal_client_id ? '********' : 'Enter PayPal Client Secret'}
-                      required={formData.paypal_mode !== 'simulation' && !formData.paypal_client_secret}
-                      className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 dark:text-white font-mono"
-                    />
-                  </div>
-                </>
-              )}
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-slate-400 dark:text-slate-555 uppercase tracking-wider">PayPal Client Secret</label>
+                  <input
+                    type="password"
+                    name="paypal_client_secret"
+                    value={formData.paypal_client_secret || ''}
+                    onChange={handleInputChange}
+                    placeholder={formData.paypal_client_id ? '********' : 'Enter PayPal Client Secret'}
+                    required={!formData.paypal_client_secret}
+                    className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 dark:text-white font-mono"
+                  />
+                </div>
+              </>
 
-              {formData.paypal_mode === 'simulation' && (
+              {formData.paypal_mode === 'sandbox' && (
                 <div className="space-y-1.5 md:col-span-2">
                   <div className="bg-amber-50 dark:bg-amber-950/20 border border-amber-100 dark:border-amber-900/30 p-4 rounded-xl">
-                    <p className="text-xs font-bold text-amber-800 dark:text-amber-400">⚡ Simulation Mode Enabled</p>
-                    <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">
-                      All invoices will display a simple <strong>Simulate Sandbox Checkout</strong> button. Customers (or yourself during testing) can complete checkouts in one click with zero network delays or credit card entries. No developer setup or API keys are required.
+                    <p className="text-xs font-bold text-amber-800 dark:text-amber-400">⚠️ Sandbox Mode Active</p>
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-2">
+                      <strong className="text-amber-600 dark:text-amber-400">Sandbox Mode active.</strong> Real money will not be moved. Get these credentials from your PayPal Developer Dashboard.
                     </p>
                   </div>
                 </div>

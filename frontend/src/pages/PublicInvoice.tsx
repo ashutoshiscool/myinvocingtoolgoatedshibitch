@@ -353,69 +353,50 @@ export default function PublicInvoice() {
                       </div>
                     )}
 
-                    {/* Simulated payments triggers */}
-                    <button
-                      onClick={handleSimulatePayment}
-                      disabled={isSimulating}
-                      className="w-full py-2.5 px-4 bg-amber-500 hover:bg-amber-600 text-white rounded-xl text-xs font-bold transition-all shadow-sm flex items-center justify-center space-x-2"
-                    >
-                      {isSimulating ? (
-                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                      ) : (
-                        <>
-                          <CreditCard className="w-4 h-4" />
-                          <span>Simulate Sandbox Checkout</span>
-                        </>
-                      )}
-                    </button>
-                    
                     {!data.hasPaypalKeys ? (
-                      <div className="bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-800 p-4 rounded-xl space-y-2 mt-2">
-                        <div className="flex items-center space-x-2 text-amber-600 dark:text-amber-400">
-                          <AlertCircle className="w-4 h-4" />
-                          <span className="text-xs font-bold uppercase tracking-wider">PayPal Simulation Mode</span>
-                        </div>
-                        <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">
-                          Standard PayPal buttons are disabled because the admin has not configured PayPal credentials. Please use the <strong className="text-amber-600 dark:text-amber-400">Simulate Sandbox Checkout</strong> button above to complete and test this payment flow.
+                      <div className="bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-800 p-6 rounded-xl text-center space-y-2 mt-4">
+                        <AlertCircle className="w-6 h-6 text-amber-500 mx-auto" />
+                        <h3 className="text-sm font-bold text-slate-800 dark:text-slate-200">No Payment Methods Available</h3>
+                        <p className="text-xs text-slate-500 dark:text-slate-400">
+                          Please contact the seller to arrange payment for this invoice.
                         </p>
-                        <div className="pt-1 text-[10px] text-slate-400 dark:text-slate-500 border-t border-slate-200/50 dark:border-slate-800/50 mt-1 leading-normal">
-                          <strong>Admin Instruction:</strong> Add <code className="bg-slate-100 dark:bg-slate-850 px-1 py-0.5 rounded text-indigo-500 font-mono text-[9px]">PAYPAL_CLIENT_ID</code> and <code className="bg-slate-100 dark:bg-slate-850 px-1 py-0.5 rounded text-indigo-500 font-mono text-[9px]">PAYPAL_CLIENT_SECRET</code> to your root <code className="bg-slate-100 dark:bg-slate-850 px-1 py-0.5 rounded font-mono text-[9px]">.env</code> file, then restart the server to enable real PayPal buttons.
-                        </div>
                       </div>
                     ) : (
                       <>
-                        <div className="text-center py-1">
-                          <span className="text-[10px] text-slate-450 dark:text-slate-500 font-medium">Or pay using PayPal Sandbox Integration:</span>
+                        <div className="text-center py-2">
+                          <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">Select Payment Method:</span>
                         </div>
 
                         {/* PayPal scripts buttons */}
                         <PayPalScriptProvider options={{ clientId: data.paypalClientId || "test", currency: invoice.currency }}>
                           <PayPalButtons
-                            style={{ layout: "vertical", height: 38 }}
+                            style={{ layout: "vertical", height: 42 }}
                             createOrder={async () => {
                               setPaymentError(null);
                               try {
                                 const res = await axios.post(`${API_BASE_URL}/public/invoices/${secure_hash}/paypal-order`);
                                 return res.data.id;
                               } catch (err: any) {
-                                setPaymentError('PayPal setup is not fully active. Use the simulation bypass button above.');
+                                setPaymentError(err.response?.data?.error || 'Could not initiate PayPal checkout.');
                                 throw err;
                               }
                             }}
-                            onApprove={async (data) => {
+                            onApprove={async (data, actions) => {
                               try {
-                                await axios.post(`${API_BASE_URL}/public/invoices/${secure_hash}/paypal-capture`, {
-                                  orderId: data.orderID,
-                                  isMock: false
+                                const res = await axios.post(`${API_BASE_URL}/public/invoices/${secure_hash}/paypal-capture`, {
+                                  orderId: data.orderID
                                 });
-                                setPaymentSuccess(true);
-                                await fetchInvoice();
-                              } catch (err) {
-                                setPaymentError('Could not process transaction captures.');
+                                if (res.data.success) {
+                                  setPaymentSuccess(true);
+                                  setTimeout(() => {
+                                    window.location.reload();
+                                  }, 2000);
+                                } else {
+                                  setPaymentError('Payment capture failed.');
+                                }
+                              } catch (err: any) {
+                                setPaymentError(err.response?.data?.error || 'Could not verify payment.');
                               }
-                            }}
-                            onError={() => {
-                              setPaymentError('PayPal payment encountered a connection issue.');
                             }}
                           />
                         </PayPalScriptProvider>
