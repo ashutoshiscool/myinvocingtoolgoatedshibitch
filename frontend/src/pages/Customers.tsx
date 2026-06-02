@@ -343,7 +343,7 @@ export default function Customers() {
                   </div>
 
                   <div className="space-y-1.5 sm:col-span-2">
-                    <label className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Phone Number</label>
+                    <label className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Phone Number (Optional)</label>
                     <input
                       type="text"
                       name="phone"

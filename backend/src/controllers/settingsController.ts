@@ -126,7 +126,7 @@ export async function updateSettings(req: AuthenticatedRequest, res: Response) {
       updatedPasswordHash,
       company_name || currentSettings.company_name,
       address || currentSettings.address,
-      phone || currentSettings.phone,
+      phone !== undefined ? phone : currentSettings.phone,
       registration_code !== undefined ? registration_code : currentSettings.registration_code,
       director_name !== undefined ? director_name : currentSettings.director_name,
       logo_url !== undefined ? logo_url : currentSettings.logo_url,

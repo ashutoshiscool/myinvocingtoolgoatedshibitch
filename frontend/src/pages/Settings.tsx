@@ -238,13 +238,12 @@ export default function Settings() {
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-xs font-bold text-slate-400 dark:text-slate-550 uppercase tracking-wider">Phone Number</label>
+                <label className="text-xs font-bold text-slate-400 dark:text-slate-550 uppercase tracking-wider">Phone Number (Optional)</label>
                 <input
                   type="text"
                   name="phone"
-                  value={formData.phone}
+                  value={formData.phone || ''}
                   onChange={handleInputChange}
-                  required
                   className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 dark:text-white"
                 />
               </div>
